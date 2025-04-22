@@ -5,23 +5,23 @@ const verifyConfirmationForNewAccount = async (req, res) => {
         const { email, confirmationCode } = req.body;
 
         if (!email || !confirmationCode) {
-            return res.json({ success: false, message: "Email or confirmation code not provided" });
+            return res.status(400).json({ success: false, message: "Email or confirmation code not provided" });
         }
 
         const user = await User.findOne({ email });
 
         if (!user) {
-            return res.json({ success: false, message: "User not found" });
+            return res.status(404).json({ success: false, message: "User not found" });
         }
 
         if (user.isVerified) {
-            return res.json({ success: false, message: "User is already verified." });
+            return res.status(409).json({ success: false, message: "User is already verified." });
         }
 
         const isValidCode = user.confirmationCodeFornewAcc === parseInt(confirmationCode) && user.expiresAt && user.expiresAt > Date.now();
 
         if (!isValidCode) {
-            return res.json({ success: false, message: "Invalid or expired confirmation code." });
+            return res.status(400).json({ success: false, message: "Invalid or expired confirmation code." });
         }
 
         user.isVerified = true;
@@ -29,11 +29,11 @@ const verifyConfirmationForNewAccount = async (req, res) => {
         user.expiresAt = null;
         await user.save();
 
-        return res.json({ success: true, message: "User verified successfully." });
+        return res.status(200).json({ success: true, message: "User verified successfully." });
 
     } catch (error) {
         console.error("Error verifying account:", error);
-        return res.json({ success: false, message: error.message });
+        return res.status(500).json({ success: false, message: error.message });
     }
 };
 
@@ -42,23 +42,23 @@ const verifyConfirmationForChangePass = async (req, res) => {
         const { email, confirmationCode } = req.body;
 
         if (!email || !confirmationCode) {
-            return res.json({ success: false, message: "Email or confirmation code not provided" });
+            return res.status(400).json({ success: false, message: "Email or confirmation code not provided" });
         }
 
         const user = await User.findOne({ email });
 
         if (!user) {
-            return res.json({ success: false, message: "User not found" });
+            return res.status(404).json({ success: false, message: "User not found" });
         }
 
         if (!user.isVerified || !user.isChangedPassword) {
-            return res.json({ success: false, message: "No password change in process or user not verified." });
+            return res.status(400).json({ success: false, message: "No password change in process or user not verified." });
         }
 
         const isValidCode = user.confirmationCodeForChangePass === parseInt(confirmationCode) && user.expiresAt && user.expiresAt > Date.now();
 
         if (!isValidCode) {
-            return res.json({ success: false, message: "Invalid or expired confirmation code." });
+            return res.status(400).json({ success: false, message: "Invalid or expired confirmation code." });
         }
 
         user.password = user.tempPasswordHash;
@@ -68,11 +68,11 @@ const verifyConfirmationForChangePass = async (req, res) => {
         user.expiresAt = null;
         await user.save();
 
-        return res.json({ success: true, message: "Password change verified successfully." });
+        return res.status(200).json({ success: true, message: "Password change verified successfully." });
 
     } catch (error) {
         console.error("Error verifying password change:", error);
-        return res.json({ success: false, message: error.message });
+        return res.status(500).json({ success: false, message: error.message });
     }
 };
 
